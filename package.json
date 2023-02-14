@@ -1,7 +1,7 @@
 {
-  "name": "example_plugin",
+  "name": "oled",
   "version": "1.0.0",
-  "description": "Example Plugin for Volumio2",
+  "description": "oled allume ta mère",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,9 +9,9 @@
   "author": "",
   "license": "ISC",
   "volumio_info": {
-    "prettyName": "Example Plugin",
+    "prettyName": "oled",
     "icon": "fa-lightbulb-o",
-    "plugin_type": "music_service"
+    "plugin_type": "user_interface"
   },
   "dependencies": {
     "fs-extra": "^0.28.0",
