@@ -19,11 +19,7 @@ function oled(context) {
 oled.prototype.onVolumioStart = function()
 {
 	
-// importe la bibliothèque onoff
-const Gpio = require('onoff').Gpio; 
 
-// définit la broche GPIO 17 comme sortie
-const led = new Gpio(17, 'out');
 	
 	var self = this;
 	var configFile=this.commandRouter.pluginManager.getConfigurationFile(this.context,'config.json');
@@ -34,10 +30,19 @@ const led = new Gpio(17, 'out');
 }
 
 oled.prototype.onStart = function() {
+
     var self = this;
 	var defer=libQ.defer();
-	led.writeSync(1);
 
+
+	const Gpio = require('onoff').Gpio;
+
+	const led = new Gpio(47, 'out'); 
+	// broche GPIO 47 (ou BCM 27) pour la LED verte d'activité
+
+	led.writeSync(1); 
+	// allume la LED
+	
 	// Once the Plugin has successfull started resolve the promise
 	defer.resolve();
 
@@ -47,7 +52,12 @@ oled.prototype.onStart = function() {
 oled.prototype.onStop = function() {
     var self = this;
     var defer=libQ.defer();
-	led.writeSync(0);
+	
+	
+	led.writeSync(0); // éteint la LED
+  	led.unexport(); // libère la ressource GPIO
+  	process.exit(); // arrête le programme
+	
 
     // Once the Plugin has successfull stopped resolve the promise
     defer.resolve();
