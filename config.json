@@ -1,9 +1,12 @@
 #interface Graphique Oled
 
 {
-	"Youpiii On a réussi ! ": {
+	"Test 1 ": {
 		"type": "int",
 		"value": 1000
 	}
+	"gpionum": {
+      "value": "",
+      "type": "number"
 }
 
