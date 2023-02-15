@@ -2,6 +2,8 @@
 
 {
 	"Youpiii On a réussi ! ": {
+		"type": "int",
+		"value": 1000
 	}
 }
 
