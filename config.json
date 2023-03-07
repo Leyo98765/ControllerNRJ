@@ -1,21 +1,2 @@
-#interface Graphique Oled
-
 {
-	"Test 1 int ": {
-		"type": "int",
-		"value": 1000
-	},
-	"Test 2 number vide ": {
-		"value": "",
-		"type": "number"
-	},
-	"Test 3 texte ":{
-		"value": "le test 3 fonctionne",
-		"type": "text"
-	}
-	"Test 4 texte ":{
-		"value": "",
-		"type": "text"
-	}
 }
-
