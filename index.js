@@ -33,8 +33,8 @@ Oled1.prototype.onVolumioStart = function()
 
 
 //Configure les settings quand le plugin PapyRadio démarre ------------------------------------------------------------------------------------------------------------
-Oled1.prototype.onStart = async function() {
-    var self = this;
+Oled1.prototype.onStart = function() {
+    	var self = this;
 	var defer=libQ.defer();
 	
 	self.debugLogging = (self.config.get('logging')==true);
@@ -101,6 +101,14 @@ Oled1.prototype.onRestart = function() {
 	if (self.debugLogging) self.logger.info('[OLED1] onRestart: free resources');
 };
 
+Oled1.prototype.playRadio = function(station){
+    socket.emit('replaceAndPlay', {
+        service:'webradio',
+        type:'webradio',
+        title:station,
+        uri: station
+    });
+}
 
 
 //Configuration Methods ------------------------------------------------------------------------------------------------------------------------------------------
