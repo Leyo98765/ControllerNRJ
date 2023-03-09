@@ -43,23 +43,23 @@ oled1.prototype.onStart = function() {
 
 	if (self.debugLogging) self.logger.info('[OLED1] onStart: Config loaded: ' + JSON.stringify(self.config));
 
-	self.socket = io.connect('http://localhost:3000');
-	self.socket.emit('getState');
-	self.socket.on('pushState',function(data){
-		self.status = data;
-		self.lastTime = data.seek - Date.now();
+	//self.socket = io.connect('http://localhost:3000');
+	//self.socket.emit('getState');
+	//self.socket.on('pushState',function(data){
+		//self.status = data;
+	//	self.lastTime = data.seek - Date.now();
 		// if (self.debugLogging) self.logger.info('[OLED1] received Websock Status: ' + JSON.stringify(self.status));
-	})
+	//})
 
-	.then(_=> {
-		self.commandRouter.pushToastMessage('success',"Oled1 - successfully loaded")
-		if (self.debugLogging) self.logger.info('[OLED1] onStart: Plugin successfully started.');				
-		defer.resolve();				
-	})
-	.fail(error => {
-		self.commandRouter.pushToastMessage('error',"oled", self.getI18nString('OLED1.TOAST_STOP_FAIL'))
-		defer.reject();
-	});
+	//.then(_=> {
+		//self.commandRouter.pushToastMessage('success',"Oled1 - successfully loaded")
+		//if (self.debugLogging) self.logger.info('[OLED1] onStart: Plugin successfully started.');				
+		//defer.resolve();				
+	//})
+	//.fail(error => {
+	//	self.commandRouter.pushToastMessage('error',"oled", self.getI18nString('OLED1.TOAST_STOP_FAIL'))
+	//	defer.reject();
+	//});
 	//let station = 'https://www.radio-en-ligne.fr/nrj';
 	//self.playRadio(station);
 
