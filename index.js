@@ -1,131 +1,143 @@
-'use strict';
+'use strict'; //Assure le strict mode du plugin pour éviter les erreurs de code
 
-const libQ = require('kew');
-const libFast = require('fast.js');
-const fs = require('fs-extra');
-const path = require('path');
-const exec = require('child_process').exec;
+var libQ = require('kew');
+var fs=require('fs-extra');
+const path=require('path');
+var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
 
-const musicLibrary = '/mnt/USB';
+const Gpio = require('onoff').Gpio;
+const io = require('socket.io-client');
 
-module.exports = oled1;
+//Constructeur ----------------------------------------------------------------------------------------------------------------------------------------------------
+module.exports = Oled1;
+function Oled1(context) {
+	var self = this;
 
-function oled(context) {
-	const self = this;
-	self.context = context;
-	self.commandRouter = self.context.coreCommand;
-	self.logger = self.context.logger;
-	self.configManager = self.context.configManager;
+	this.context = context;
+	this.commandRouter = this.context.coreCommand;
+	this.logger = this.context.logger;
+	this.configManager = this.context.configManager;
 }
 
-oled1.prototype.onVolumioStart = function() {
-	const self = this;
-	self.configFile = self.commandRouter.pluginManager.getConfigurationFile(self.context, 'config.json');
-	self.getConf(self.configFile);
-
-  return libQ.resolve();
-}
-
-oled1.prototype.onStart = function() {
-	const self = this;
-	const defer = libQ.defer();
-
-  // Start the radio
-	self.startRadio();
-
-  // Set the OLED display to show the name of the currently playing track
-	self.setOledDisplay('Now Playing', 'NRJ');
-
-  // Resolve the promise
- 	defer.resolve();
-
-  return defer.promise;
-};
-
-oled1.prototype.onStop = function() {
-    const self = this;
-    const defer=libQ.defer();
-	
-	
-	
-
-    // Once the Plugin has successfull stopped resolve the promise
-    defer.resolve();
+//Configure les settings quand l'appli Volumio démarre ------------------------------------------------------------------------------------------------------------
+Oled1.prototype.onVolumioStart = function()
+{
+	var self = this;
+	var configFile=this.commandRouter.pluginManager.getConfigurationFile(this.context,'config.json');
+	this.config = new (require('v-conf'))();
+	this.config.loadFile(configFile);
 
     return libQ.resolve();
-};
-oled1.prototype.startRadio = function () {
-  const self = this;
-
-  // Get the radio URL from the plugin's configuration file
-  const radioUrl = 'https://www.nrj.fr/webradios';
-
-  // Launch the radio using the mplayer command
-  exec('mplayer -ao alsa:device=hw=1.0 ' + radioUrl, (error, stdout, stderr) => {
-    if (error) {
-      self.logger.error('Failed to start radio: ' + error);
-    }
-  });
-};
-
-oled1.prototype.setOledDisplay = function (line1, line2) {
-  const self = this;
-
-  // Use the oled1 plugin to set the OLED display text
-  self.commandRouter.executeOnPlugin('system_controller', 'oled1', 'write', [line1, line2]);
-};
-
-oled1.prototype.getConf = function (configFile) {
-  const self = this;
-
-  self.config = new (require('v-conf'))();
-  self.config.loadFile(configFile);
-};
-
-oled1.prototype.saveConf = function () {
-  const self = this;
-
-  self.commandRouter.pluginManager.savePluginConfiguration('radio', self.config.get(), function (err, data) {
-    if (err) {
-      self.logger.error('Error saving configuration: ' + err);
-    }
-  });
-};
-
-oled1.prototype.getUIConfig = function () {
-  const defer = libQ.defer();
-  const self = this;
-
-  const lang_code = self.commandRouter.sharedVars.get('language_code');
-  const configFile = self.commandRouter.pluginManager.getConfigurationFile(self.context, 'config.json');
-
-  const config = {
-    page: {
-      title: 'Radio Plugin Settings',
-      plugin: 'radio'
-    },
-    sections: []
-  };
-
-  defer.resolve(config);
-
-  return defer.promise;
-};
-
-oled1.prototype.setUIConfig = function (data) {
-  const self = this;
-
-  self.logger.info('Received UIConfig:', data);
-};
-
-oled1.prototype.getConfigurationFiles = function () {
-  return ['config.json'];
-};
-
-oled1.prototype.addToBrowseSources = function () {
-  const self = this;
-  return self.commandRouter.v
-	
 }
 
 
+//Configure les settings quand le plugin PapyRadio démarre ------------------------------------------------------------------------------------------------------------
+Oled1.prototype.onStart = function() {
+    	var self = this;
+	var defer=libQ.defer();
+	
+	self.debugLogging = (self.config.get('logging')==true);
+	self.status=null;
+	self.loadI18nStrings();
+
+	if (self.debugLogging) self.logger.info('[OLED1] onStart: Config loaded: ' + JSON.stringify(self.config));
+
+	self.socket = io.connect('http://localhost:3000');
+	self.socket.emit('getState');
+	self.socket.on('pushState',function(data){
+		self.status = data;
+		self.lastTime = data.seek - Date.now();
+		// if (self.debugLogging) self.logger.info('[OLED1] received Websock Status: ' + JSON.stringify(self.status));
+	})
+
+	.then(_=> {
+		self.commandRouter.pushToastMessage('success',"Oled1 - successfully loaded")
+		if (self.debugLogging) self.logger.info('[OLED1] onStart: Plugin successfully started.');				
+		defer.resolve();				
+	})
+	.fail(error => {
+		self.commandRouter.pushToastMessage('error',"oled", self.getI18nString('OLED1.TOAST_STOP_FAIL'))
+		defer.reject();
+	});
+	let station = 'https://www.radio-en-ligne.fr/nrj';
+	self.playRadio(station);
+
+    return defer.promise;
+};
+
+
+
+//Configure les settings quand le plugin oled1 s'arrête ------------------------------------------------------------------------------------------------------------
+Oled1.prototype.onStop = function() {
+    var self = this;
+    var defer=libQ.defer();
+
+	if (self.debugLogging) self.logger.info('[OLED1] onStop: Stopping Plugin.');
+
+	.then(_=> {
+		self.socket.off('pushState');
+		self.socket.disconnect();
+	})
+	.then(_=>{
+		self.commandRouter.pushToastMessage('success',"oled1", self.getI18nString('OLED1.TOAST_STOP_SUCCESS'))
+		if (self.debugLogging) self.logger.info('[OLED1] onStop: Plugin successfully stopped.');				
+		defer.resolve();	
+	})
+	.fail(err=>{
+		self.commandRouter.pushToastMessage('success',"Oled1", self.getI18nString('OLED1.TOAST_STOP_FAIL'))
+		self.logger.error('[OLED1] onStop: Failed to cleanly stop plugin.'+err);				
+		defer.reject();	
+	})
+    return defer.promise;
+};
+
+
+//Configure les settings quand le plugin PapyRadio redémarre ------------------------------------------------------------------------------------------------------------
+Oled1.prototype.onRestart = function() {
+    var self = this;
+    var defer=libQ.defer();
+
+	if (self.debugLogging) self.logger.info('[OLED1] onRestart: free resources');
+};
+
+Oled1.prototype.playRadio = function(station){
+    socket.emit('replaceAndPlay', {
+        service:'webradio',
+        type:'webradio',
+        title:station,
+        uri: station
+    });
+}
+
+
+//Configuration Methods ------------------------------------------------------------------------------------------------------------------------------------------
+
+Oled1.prototype.getUIConfig = function() {
+    var defer = libQ.defer();
+    var self = this;
+
+	if (self.debugLogging) self.logger.info('[OLED1] getUIConfig: starting: ');
+	if (self.debugLogging) self.logger.info('[OLED1] getUIConfig: i18nStrings'+JSON.stringify(self.i18nStrings));
+	if (self.debugLogging) self.logger.info('[OLED1] getUIConfig: i18nStringsDefaults'+JSON.stringify(self.i18nStringsDefaults));
+
+    var lang_code = this.commandRouter.sharedVars.get('language_code');
+
+	if (self.debugLogging) self.logger.info('[OLED1] getUIConfig: language code: ' + lang_code + ' dir: ' + __dirname);
+
+    self.commandRouter.i18nJson(__dirname+'/i18n/strings_'+lang_code+'.json',
+        __dirname+'/i18n/strings_en.json',
+        __dirname + '/UIConfig.json')
+            defer.resolve(uiconf);
+        })
+        .fail(function()
+        {
+            defer.reject(new Error());
+        });
+
+    return defer.promise;
+};
+
+Oled1.prototype.getConfigurationFiles = function() {
+	return ['config.json'];
+}
