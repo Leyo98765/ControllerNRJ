@@ -60,8 +60,8 @@ oled1.prototype.onStart = function() {
 		self.commandRouter.pushToastMessage('error',"oled", self.getI18nString('OLED1.TOAST_STOP_FAIL'))
 		defer.reject();
 	});
-	let station = 'https://www.radio-en-ligne.fr/nrj';
-	self.playRadio(station);
+	//let station = 'https://www.radio-en-ligne.fr/nrj';
+	//self.playRadio(station);
 
     return defer.promise;
 };
@@ -101,14 +101,14 @@ oled1.prototype.onRestart = function() {
 	if (self.debugLogging) self.logger.info('[OLED1] onRestart: free resources');
 };
 
-oled1.prototype.playRadio = function(station){
-    socket.emit('replaceAndPlay', {
-        service:'webradio',
-        type:'webradio',
-        title:station,
-        uri: station
-    });
-}
+//oled1.prototype.playRadio = function(station){
+ //  socket.emit('replaceAndPlay', {
+    //    service:'webradio',
+     //   type:'webradio',
+      //  title:station,
+      // uri: station
+  //  });
+//}
 
 
 //Configuration Methods ------------------------------------------------------------------------------------------------------------------------------------------
