@@ -10,7 +10,7 @@ const Gpio = require('onoff').Gpio;
 const io = require('socket.io-client');
 
 //Constructeur ----------------------------------------------------------------------------------------------------------------------------------------------------
-module.exports = Oled1;
+module.exports = oled1;
 function Oled1(context) {
 	var self = this;
 
@@ -21,7 +21,7 @@ function Oled1(context) {
 }
 
 //Configure les settings quand l'appli Volumio démarre ------------------------------------------------------------------------------------------------------------
-Oled1.prototype.onVolumioStart = function()
+oled1.prototype.onVolumioStart = function()
 {
 	var self = this;
 	var configFile=this.commandRouter.pluginManager.getConfigurationFile(this.context,'config.json');
@@ -33,7 +33,7 @@ Oled1.prototype.onVolumioStart = function()
 
 
 //Configure les settings quand le plugin PapyRadio démarre ------------------------------------------------------------------------------------------------------------
-Oled1.prototype.onStart = function() {
+oled1.prototype.onStart = function() {
     	var self = this;
 	var defer=libQ.defer();
 	
@@ -69,7 +69,7 @@ Oled1.prototype.onStart = function() {
 
 
 //Configure les settings quand le plugin oled1 s'arrête ------------------------------------------------------------------------------------------------------------
-Oled1.prototype.onStop = function() {
+oled1.prototype.onStop = function() {
     var self = this;
     var defer=libQ.defer();
 
@@ -94,14 +94,14 @@ Oled1.prototype.onStop = function() {
 
 
 //Configure les settings quand le plugin PapyRadio redémarre ------------------------------------------------------------------------------------------------------------
-Oled1.prototype.onRestart = function() {
+oled1.prototype.onRestart = function() {
     var self = this;
     var defer=libQ.defer();
 
 	if (self.debugLogging) self.logger.info('[OLED1] onRestart: free resources');
 };
 
-Oled1.prototype.playRadio = function(station){
+oled1.prototype.playRadio = function(station){
     socket.emit('replaceAndPlay', {
         service:'webradio',
         type:'webradio',
@@ -113,7 +113,7 @@ Oled1.prototype.playRadio = function(station){
 
 //Configuration Methods ------------------------------------------------------------------------------------------------------------------------------------------
 
-Oled1.prototype.getUIConfig = function() {
+oled1.prototype.getUIConfig = function() {
     var defer = libQ.defer();
     var self = this;
 
