@@ -20,32 +20,32 @@ function Oled1(context) {
 oled1.prototype.onVolumioStart = function()
 {
 	var self = this;
-	var configFile=this.commandRouter.pluginManager.getConfigurationFile(this.context,'config.json'); //self ou this ???
+	var configFile=this.commandRouter.pluginManager.getConfigurationFile(this.context,'config.json');
 	this.config = new (require('v-conf'))();
 	this.config.loadFile(configFile);
-
-    return libQ.resolve();
+	return libQ.resolve();
 }
 
 //Configure les settings quand le plugin PapyRadio démarre ------------------------------------------------------------------------------------------------------------
 oled1.prototype.onStart = function() {
     	var self = this;
-	self.logger.info("Starting oled1");
-	return libQ.resolve();
-
+    	var defer=libQ.defer();
+	return defer.promise;
 };
 
 //Configure les settings quand le plugin oled1 s'arrête ------------------------------------------------------------------------------------------------------------
 oled1.prototype.onStop = function() {
 	var self = this;
 	self.logger.info("Stopping oled1");
- 	return libQ.resolve(); //si ca marche pas mettre : var defer=libQ.defer();
+ 	var defer=libQ.defer();
+	return defer.promise;
 };
 
 //Configure les settings quand le plugin PapyRadio redémarre ------------------------------------------------------------------------------------------------------------
 oled1.prototype.onRestart = function() {
     	var self = this;
-	return libQ.resolve();
+ 	var defer=libQ.defer();
+	return defer.promise;
 };
 
 
