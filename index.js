@@ -30,6 +30,8 @@ oled1.prototype.onVolumioStart = function()
 oled1.prototype.onStart = function() {
     	var self = this;
     	var defer=libQ.defer();
+	  // Once the Plugin has successfull stopped resolve the promise
+    	defer.resolve();
 	return defer.promise;
 };
 
@@ -38,6 +40,8 @@ oled1.prototype.onStop = function() {
 	var self = this;
 	self.logger.info("Stopping oled1");
  	var defer=libQ.defer();
+	  // Once the Plugin has successfull stopped resolve the promise
+   	defer.resolve();
 	return defer.promise;
 };
 
