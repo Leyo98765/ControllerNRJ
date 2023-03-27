@@ -1,75 +1,83 @@
 'use strict';
 
 var libQ = require('kew');
-var exec = require('child_process').exec;
+var fs = require('fs-extra');
 var config = new(require('v-conf'))();
-var RadioStation = "http://your_radio_station_url_here.com/stream" //changer l'url de la radio
+var exec = require('child_process').exec;
 
-//Constructeur ----------------------------------------------------------------------------------------------------------------------------------------------------
-module.exports = oled1;
-function Oled1(context) {
-	var self = this;
+// Define the ControllerNRJ class
+module.exports = ControllerNRJ;
 
-	this.context = context;
-	this.commandRouter = this.context.coreCommand;
-	this.logger = this.context.logger;
-	this.configManager = this.context.configManager;
-}
-
-//Configure les settings quand l'appli Volumio démarre ------------------------------------------------------------------------------------------------------------
-oled1.prototype.onVolumioStart = function()
-{
-	var self = this;
-	var configFile=this.commandRouter.pluginManager.getConfigurationFile(this.context,'config.json');
-	this.config = new (require('v-conf'))();
-	this.config.loadFile(configFile);
-	return libQ.resolve();
-}
-
-//Configure les settings quand le plugin PapyRadio démarre ------------------------------------------------------------------------------------------------------------
-oled1.prototype.onStart = function() {
-    	var self = this;
-    	var defer=libQ.defer();
-	  // Once the Plugin has successfull stopped resolve the promise
-    	defer.resolve();
-	return defer.promise;
-};
-
-//Configure les settings quand le plugin oled1 s'arrête ------------------------------------------------------------------------------------------------------------
-oled1.prototype.onStop = function() {
-	var self = this;
-	self.logger.info("Stopping oled1");
- 	var defer=libQ.defer();
-	  // Once the Plugin has successfull stopped resolve the promise
-   	defer.resolve();
-	return defer.promise;
-};
-
-//Configure les settings quand le plugin PapyRadio redémarre ------------------------------------------------------------------------------------------------------------
-oled1.prototype.onRestart = function() {
-    	var self = this;
- 	var defer=libQ.defer();
-	return defer.promise;
-};
-
-
-//Configuration Methods ------------------------------------------------------------------------------------------------------------------------------------------
-
-oled1.prototype.getUIConfig = function() {
-    var defer = libQ.defer();
+function ControllerNRJ(context) {
     var self = this;
+    self.context = context;
+    self.commandRouter = self.context.coreCommand;
+    self.logger = self.commandRouter.logger;
 
-	if (self.debugLogging) self.logger.info('[OLED1] getUIConfig: starting: ');
-	if (self.debugLogging) self.logger.info('[OLED1] getUIConfig: i18nStrings'+JSON.stringify(self.i18nStrings));
-	if (self.debugLogging) self.logger.info('[OLED1] getUIConfig: i18nStringsDefaults'+JSON.stringify(self.i18nStringsDefaults));
+    // Perform your initialization here
+};
 
+ControllerNRJ.prototype.onVolumioStart = function() {
+    var self = this;
+    var configFile = this.commandRouter.pluginManager.getConfigurationFile(this.context, 'config.json');
+    config.loadFile(configFile);
+    return libQ.resolve();
+};
+
+ControllerNRJ.prototype.onStart = function() {
+    var self = this;
+    var defer=libQ.defer();
+
+    // Start your plugin here
+    exec('/usr/bin/sudo /bin/systemctl start NRJ.service', function (error, stdout, stderr) {
+        if (error !== null) {
+            self.logger.info('[' + Date.now() + '] ' + 'Error starting NRJ service: ' + error);
+            defer.reject();
+        } else {
+            self.logger.info('[' + Date.now() + '] ' + 'NRJ service started');
+            defer.resolve();
+        }
+    });
+
+    return defer.promise;
+};
+
+ControllerNRJ.prototype.onStop = function() {
+    var self = this;
+    var defer=libQ.defer();
+
+    // Stop your plugin here
+    exec('/usr/bin/sudo /bin/systemctl stop NRJ.service', function (error, stdout, stderr) {
+        if (error !== null) {
+            self.logger.info('[' + Date.now() + '] ' + 'Error stopping NRJ service: ' + error);
+            defer.reject();
+        } else {
+            self.logger.info('[' + Date.now() + '] ' + 'NRJ service stopped');
+            defer.resolve();
+        }
+    });
+
+    return defer.promise;
+};
+
+ControllerNRJ.prototype.onRestart = function() {
+    var self = this;
+    // Optional, use if you need it
+};
+
+// Configuration Methods -----------------------------------------------------------------------------
+
+ControllerNRJ.prototype.getUIConfig = function() {
+    var defer = libQ.defer();
     var lang_code = this.commandRouter.sharedVars.get('language_code');
 
-	if (self.debugLogging) self.logger.info('[OLED1] getUIConfig: language code: ' + lang_code + ' dir: ' + __dirname);
-
-    self.commandRouter.i18nJson(__dirname+'/i18n/strings_'+lang_code+'.json',
+    this.commandRouter.i18nJson(__dirname+'/i18n/strings_'+lang_code+'.json',
         __dirname+'/i18n/strings_en.json',
         __dirname + '/UIConfig.json')
+        .then(function(uiconf)
+        {
+            uiconf.sections[0].content[0].value=config.get('url');
+
             defer.resolve(uiconf);
         })
         .fail(function()
@@ -80,6 +88,17 @@ oled1.prototype.getUIConfig = function() {
     return defer.promise;
 };
 
-Oled1.prototype.getConfigurationFiles = function() {
-	return ['config.json'];
-}
+ControllerNRJ.prototype.setUIConfig = function(data) {
+    var self = this;
+    //Perform your installation tasks here
+};
+
+ControllerNRJ.prototype.getConf = function(varName) {
+    var self = this;
+    //Perform your installation tasks here
+};
+
+ControllerNRJ.prototype.setConf = function(varName, varValue) {
+    var self = this;
+    //Perform your installation tasks here
+};
