@@ -1,5 +1,5 @@
 {
-  "name": "oled1",
+  "name": "ControllerNRJ",
   "version": "1.0.0",
   "description": "oled allume ta mère",
   "main": "index.js",
@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "volumio_info": {
-    "prettyName": "oled1",
+    "prettyName": "ControllerNRJ",
     "icon": "fa-lightbulb-o",
     "plugin_type": "user_interface"
   },
